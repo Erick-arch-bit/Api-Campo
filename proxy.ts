@@ -8,7 +8,7 @@ const PUBLICAS = [
   '/api/health',
 ]
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   // Preflight CORS
@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
   // Solo aplica a rutas /api/*
   if (!pathname.startsWith('/api/')) return NextResponse.next()
 
-  // Rutas públicas — pasar directo
+  // Rutas publicas: pasar directo
   if (PUBLICAS.some(r => pathname.startsWith(r))) {
     return NextResponse.next()
   }
@@ -30,10 +30,10 @@ export async function middleware(req: NextRequest) {
   let usuario = null
 
   if (authHeader?.startsWith('Bearer ')) {
-    // App móvil → JWT_SECRET_APP (30 días)
+    // App movil -> JWT_SECRET_APP (30 dias)
     usuario = await verificarToken(authHeader.slice(7), 'app')
   } else if (cookieToken) {
-    // Dashboard web → JWT_SECRET (8 horas)
+    // Dashboard web -> JWT_SECRET (8 horas)
     usuario = await verificarToken(cookieToken, 'web')
   }
 

@@ -1,12 +1,19 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function enviarCodigoPorEmail(
   email: string, nombre: string, codigo: string
 ) {
+  const apiKey = process.env.RESEND_API_KEY
+  const from = process.env.EMAIL_FROM
+
+  if (!apiKey || !from) {
+    throw new Error('Faltan variables RESEND_API_KEY o EMAIL_FROM')
+  }
+
+  const resend = new Resend(apiKey)
+
   await resend.emails.send({
-    from:    process.env.EMAIL_FROM!,
+    from,
     to:      email,
     subject: 'Tu código de acceso — SADERH',
     html: `

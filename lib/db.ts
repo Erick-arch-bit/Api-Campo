@@ -14,7 +14,4 @@ const pool = new Pool({
 
 pool.on('error', (err) => console.error('[DB Pool Error]', err.message))
 
-// Probar conexión al inicio
-pool.query('SELECT 1').then(() => console.log('✅ Pool de BD conectado')).catch(e => console.error('❌ Pool BD:', e.message))
-
 export const db = drizzle(pool, { schema })

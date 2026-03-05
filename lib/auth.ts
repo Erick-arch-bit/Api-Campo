@@ -1,6 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose'
 import bcrypt from 'bcryptjs'
-import { randomInt, randomBytes } from 'crypto'
 
 const enc = new TextEncoder()
 
@@ -35,11 +34,17 @@ export async function verificarToken(
 // ── CÓDIGO DE ACCESO ─────────────────────────────────────────────
 // Genera número de 5 dígitos entre 10000-99999 (siempre 5 dígitos)
 export function generarCodigoAcceso(): string {
-  return String(randomInt(10000, 100000))
+  const array = new Uint32Array(1)
+  crypto.getRandomValues(array)
+  return String((array[0] % 90000) + 10000)
 }
 
 export const hashCodigo      = (c: string) => bcrypt.hash(c, 12)
 export const verificarCodigo = (c: string, hash: string) => bcrypt.compare(c, hash)
 
 // ── TOKEN DE RECUPERACIÓN ────────────────────────────────────────
-export const generarTokenRecuperacion = () => randomBytes(32).toString('hex')
+export const generarTokenRecuperacion = () => {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+}
