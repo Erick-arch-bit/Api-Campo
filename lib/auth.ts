@@ -35,7 +35,7 @@ export async function verificarToken(
 // Genera número de 5 dígitos entre 10000-99999 (siempre 5 dígitos)
 export function generarCodigoAcceso(): string {
   const array = new Uint32Array(1)
-  crypto.getRandomValues(array)
+  self.crypto.getRandomValues(array)
   return String((array[0] % 90000) + 10000)
 }
 
@@ -45,6 +45,6 @@ export const verificarCodigo = (c: string, hash: string) => bcrypt.compare(c, ha
 // ── TOKEN DE RECUPERACIÓN ────────────────────────────────────────
 export const generarTokenRecuperacion = () => {
   const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
+  self.crypto.getRandomValues(bytes)
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
