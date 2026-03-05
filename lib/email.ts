@@ -1,13 +1,26 @@
 import { Resend } from 'resend'
 
+let resendInstance: Resend | null = null
+
+function getResend(): Resend {
+  if (!resendInstance) {
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY no está configurada en las variables de entorno')
+    }
+    resendInstance = new Resend(apiKey)
+  }
+  return resendInstance
+}
+
 export async function enviarCodigoPorEmail(
   email: string, nombre: string, codigo: string
 ) {
-  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
-    throw new Error('Faltan variables RESEND_API_KEY o EMAIL_FROM')
+  if (!process.env.EMAIL_FROM) {
+    throw new Error('EMAIL_FROM no está configurada en las variables de entorno')
   }
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
+  const resend = getResend()
 
   await resend.emails.send({
     from: process.env.EMAIL_FROM!,
