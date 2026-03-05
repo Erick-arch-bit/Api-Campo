@@ -7,6 +7,7 @@ import { apiOk, apiError, getUser, requireRol, withErrorHandler } from '@/lib/he
 import { logAuditoria }   from '@/lib/auditoria'
 import { getIp }          from '@/lib/helpers'
 import { z }              from 'zod'
+import { cacheGet, cacheSet, invalidateCache } from '@/lib/redis'
 
 const CrearUsuarioSchema = z.object({
   nombre_completo:               z.string().min(3).max(150),
@@ -26,6 +27,15 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   const rol    = searchParams.get('rol')
   const id_zona = searchParams.get('id_zona')
   const buscar  = searchParams.get('buscar')
+
+  // Cache key basado en parámetros
+  const cacheKey = `usuarios:list:${rol || 'all'}:${id_zona || 'all'}:${buscar || 'none'}`
+
+  // Intentar obtener del cache
+  const cached = await cacheGet<unknown[]>(cacheKey)
+  if (cached) {
+    return apiOk(cached)
+  }
 
   let query = db
     .select({
@@ -50,6 +60,10 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
   if (conditions.length) query = query.where(and(...conditions)) as any
 
   const lista = await query
+  
+  // Guardar en cache por 2 minutos
+  await cacheSet(cacheKey, lista, 120)
+  
   return apiOk(lista)
 })
 
@@ -101,6 +115,9 @@ export const POST = withErrorHandler(async (req: NextRequest) => {
     despues: { nombre: nuevo.nombre_completo, rol: nuevo.rol, email: nuevo.email },
     ip: getIp(req),
   })
+
+  // Invalidar cache de usuarios
+  await invalidateCache('usuarios:list:*')
 
   // DEVOLVER EL CÓDIGO EN TEXTO UNA SOLA VEZ para que el admin se lo dé al técnico
   return apiOk({ usuario: nuevo, codigo_generado: codigo }, 201)
